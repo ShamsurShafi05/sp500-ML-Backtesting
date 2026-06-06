@@ -272,7 +272,7 @@ if os.path.exists(scored_path):
     else:
         st.info("📭 No headlines cached for this date — only last 30 days available from NewsAPI free tier.")
 else:
-    st.info("No scored headlines file found.")
+    st.info("📭 No headlines cache found. Data covers the last 30 days only (NewsAPI free tier limitation).")
 
 # ── ROLLING PRECISION CHART ───────────────────────────────────────────────────
 
