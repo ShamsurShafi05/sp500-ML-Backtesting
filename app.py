@@ -55,10 +55,10 @@ with col3:
               help="% of UP predictions that were correct during backtesting")
 
 st.info(
-    f"ℹ️ The model only predicts **UP** when confidence ≥ 60%. "
-    f"Otherwise it abstains (shows DOWN/UNCERTAIN). "
-    f"Only {up_preds if 'up_preds' in dir() else '~460'} UP calls were made across 3,600+ trading days — "
-    f"this is intentional conservatism, not a bug."
+    "ℹ️ The model only predicts **UP** when confidence ≥ 60%. "
+    "Otherwise it abstains (shows DOWN/UNCERTAIN). "
+    "Only ~460 UP calls were made across 3,600+ trading days — "
+    "this is intentional conservatism, not a bug."
 )
 
 st.divider()
