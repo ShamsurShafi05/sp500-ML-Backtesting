@@ -186,7 +186,7 @@ GROQ_API_KEY = "your_key_here"
 
 ## Important Notes
 
-- **NewsAPI free tier** — 100 requests/day, 30 days of history. Headlines are cached to CSV to avoid re-fetching.
+- - **NewsAPI free tier** — 100 requests/day, 30 days of history. Headlines and sentiment scores are cached to `data/headlines_scored.csv` and committed to the repo. This file must be manually refreshed monthly as older headlines fall outside the free tier's 30-day window.
 - **First load** — model trains fresh from Yahoo Finance (~2-3 minutes). Subsequent loads use the cached model.
 - **Sentiment vs training** — news sentiment is used as a confidence filter at prediction time, not as a training feature, since historical headline data is not available on the free tier.
 
