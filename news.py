@@ -4,12 +4,22 @@ import pandas as pd
 from datetime import datetime, timedelta
 from newsapi import NewsApiClient
 from groq import Groq
-from dotenv import load_dotenv
 
-load_dotenv()
+# ── API KEYS (works both locally and on Streamlit Cloud) ─────────────────────
 
-newsapi = NewsApiClient(api_key=os.getenv("NEWSAPI_KEY"))
-groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+def _get_keys():
+    try:
+        import streamlit as st
+        return st.secrets["NEWSAPI_KEY"], st.secrets["GROQ_API_KEY"]
+    except:
+        from dotenv import load_dotenv
+        load_dotenv()
+        return os.getenv("NEWSAPI_KEY"), os.getenv("GROQ_API_KEY")
+
+NEWSAPI_KEY, GROQ_API_KEY = _get_keys()
+
+newsapi      = NewsApiClient(api_key=NEWSAPI_KEY)
+groq_client  = Groq(api_key=GROQ_API_KEY)
 
 # ── 1. FETCH HEADLINES ────────────────────────────────────────────────────────
 
@@ -33,7 +43,6 @@ def fetch_and_cache_headlines(path="data/headlines.csv", days=30):
     """Fetch last 30 days of headlines, skip dates already cached"""
     os.makedirs("data", exist_ok=True)
 
-    # Load existing cache
     if os.path.exists(path):
         existing = pd.read_csv(path)
         existing["date"] = pd.to_datetime(existing["date"]).dt.strftime("%Y-%m-%d")
@@ -99,7 +108,6 @@ def score_and_cache(headlines_path="data/headlines.csv",
 
     df = pd.read_csv(headlines_path)
 
-    # Load existing scored cache
     if os.path.exists(scored_path):
         scored = pd.read_csv(scored_path)
         scored_dates = set(scored["date"].astype(str).tolist())
