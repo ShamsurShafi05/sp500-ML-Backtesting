@@ -20,23 +20,16 @@ st.caption("Random Forest + VIX + News Sentiment")
 
 # ── LOAD MODEL + DATA ─────────────────────────────────────────────────────────
 
-# @st.cache_resource
-# def get_model_and_data():
-#     pkg = load_model("sp500_model.pkl")
-#     sp500, predictors = engineer_features(load_data())
-#     return pkg, sp500, predictors
-
 @st.cache_resource
 def get_model_and_data():
     from model import train_and_save
     if not os.path.exists("sp500_model.pkl"):
-        with st.spinner("Training model for first time... (this takes 2-3 mins)"):
-            train_and_save()
+        train_and_save()
     pkg = load_model("sp500_model.pkl")
     sp500, predictors = engineer_features(load_data())
     return pkg, sp500, predictors
 
-with st.spinner("Loading model and data..."):
+with st.spinner("Loading model and data... (first run takes 2-3 mins, please wait)"):
     pkg, sp500, predictors = get_model_and_data()
 
 model       = pkg["model"]
@@ -84,8 +77,8 @@ def get_sentiment():
 with st.spinner("Fetching today's headlines..."):
     sentiment = get_sentiment()
 
-slabel   = sentiment["label"]
-sscore   = sentiment["score"]
+slabel    = sentiment["label"]
+sscore    = sentiment["score"]
 headlines = sentiment.get("headlines", [])
 
 scol1, scol2 = st.columns([1, 2])
@@ -208,14 +201,13 @@ selected_date = st.date_input(
 
 selected_ts = pd.Timestamp(selected_date)
 
-# Find closest available trading day
 if selected_ts in predictions.index:
     row = predictions.loc[selected_ts]
     display_date = selected_ts
 else:
-    nearest_idx = predictions.index.get_indexer([selected_ts], method="nearest")[0]
+    nearest_idx  = predictions.index.get_indexer([selected_ts], method="nearest")[0]
     display_date = predictions.index[nearest_idx]
-    row = predictions.loc[display_date]
+    row          = predictions.loc[display_date]
     st.caption(
         f"No trading data for {selected_date} (weekend/holiday) — "
         f"showing nearest trading day: {display_date.date()}"
@@ -247,7 +239,7 @@ with dcol3:
     else:
         st.markdown("<h3 style='color:red'>❌ Wrong</h3>", unsafe_allow_html=True)
 
-# ── HEADLINES FOR SELECTED DATE (always shown, not nested in correct/wrong) ───
+# ── HEADLINES FOR SELECTED DATE ───────────────────────────────────────────────
 
 st.markdown("---")
 scored_path = "data/headlines_scored.csv"
