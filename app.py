@@ -22,10 +22,10 @@ st.caption("Random Forest + VIX + News Sentiment")
 
 @st.cache_resource
 def get_model_and_data():
-    from model import train_and_save
-    if not os.path.exists("sp500_model.pkl"):
+    from model import train_and_save, MODEL_PATH
+    if not os.path.exists(MODEL_PATH):
         train_and_save()
-    pkg = load_model("sp500_model.pkl")
+    pkg = load_model(MODEL_PATH)
     sp500, predictors = engineer_features(load_data())
     return pkg, sp500, predictors
 

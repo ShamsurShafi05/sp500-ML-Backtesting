@@ -1,3 +1,4 @@
+import os
 import yfinance as yf
 import pandas as pd
 import numpy as np
@@ -5,19 +6,21 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import precision_score
 import pickle
 
+BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "sp500_model.pkl")
+
 # ── 1. DATA ──────────────────────────────────────────────────────────────────
 
 def load_data():
-    # S&P 500
     sp500 = yf.Ticker("^GSPC").history(period="max")
     sp500.index = sp500.index.tz_localize(None)
     sp500 = sp500.drop(columns=["Dividends", "Stock Splits"], errors="ignore")
     sp500 = sp500.loc["1998-01-01":].copy()
 
-    # VIX — join on date index
     vix = yf.Ticker("^VIX").history(period="max")[["Close"]]
     vix.columns = ["VIX"]
     vix.index = vix.index.tz_localize(None)
+
     sp500 = sp500.join(vix, how="left")
     sp500["VIX"] = sp500["VIX"].ffill()
 
@@ -29,9 +32,9 @@ def engineer_features(sp500):
     sp500 = sp500.copy()
 
     sp500["Tomorrow"] = sp500["Close"].shift(-1)
-    sp500["Target"] = (sp500["Tomorrow"] > sp500["Close"]).astype(int)
+    sp500["Target"]   = (sp500["Tomorrow"] > sp500["Close"]).astype(int)
 
-    horizons = [2, 5, 60, 250, 1000]
+    horizons   = [2, 5, 60, 250, 1000]
     predictors = ["VIX"]
 
     for i in horizons:
@@ -48,7 +51,7 @@ def engineer_features(sp500):
     sp500 = sp500.dropna()
     return sp500, predictors
 
-# ── 3. PREDICT + BACKTEST (your exact logic) ─────────────────────────────────
+# ── 3. PREDICT + BACKTEST ────────────────────────────────────────────────────
 
 def predict(train, test, predictors, model):
     model.fit(train[predictors], train["Target"])
@@ -66,7 +69,10 @@ def backtesting(data, model, predictors, start=2500, step=250):
 
 # ── 4. TRAIN + SAVE ──────────────────────────────────────────────────────────
 
-def train_and_save(path="sp500_model.pkl"):
+def train_and_save(path=None):
+    if path is None:
+        path = MODEL_PATH
+
     print("Downloading data...")
     sp500 = load_data()
 
@@ -87,17 +93,20 @@ def train_and_save(path="sp500_model.pkl"):
 
     with open(path, "wb") as f:
         pickle.dump({
-            "model": model,
-            "predictors": predictors,
+            "model":       model,
+            "predictors":  predictors,
             "predictions": predictions,
-            "precision": score
+            "precision":   score
         }, f)
+
     print(f"Model saved to {path}")
     return model, predictors, predictions, score
 
 # ── 5. LOAD ──────────────────────────────────────────────────────────────────
 
-def load_model(path="sp500_model.pkl"):
+def load_model(path=None):
+    if path is None:
+        path = MODEL_PATH
     with open(path, "rb") as f:
         return pickle.load(f)
 
@@ -105,7 +114,7 @@ def load_model(path="sp500_model.pkl"):
 
 def predict_today(model, sp500, predictors):
     latest = sp500[predictors].iloc[-1:]
-    prob = model.predict_proba(latest)[0][1]
+    prob   = model.predict_proba(latest)[0][1]
 
     if prob >= 0.6:
         label = "UP 📈"
